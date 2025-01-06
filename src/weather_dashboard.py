@@ -23,9 +23,12 @@ class WeatherDashboard:
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={self.api_key}"
         response = requests.get(url)
         print("writing weather data to file")
-        with open("weather.json", "w") as file:
+        filename = (
+            f"{city}-{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
+        )
+        with open(filename, "w") as file:
             file.write(json.dumps(response.json()))
-        return response.json()
+        return filename
 
     def create_bucket(self):
         print(f"Creating bucket {self.bucket_name}")
@@ -35,15 +38,12 @@ class WeatherDashboard:
         except Exception as e:
             return f"Error creating bucket: {e}"
 
-    def upload_file(self, file_name, file_path):
-        print(f"Uploading file {file_name} to {self.bucket_name}")
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    def upload_file(self, file):
+        print(f"Uploading file {file} to {self.bucket_name}")
         try:
-            self.s3_client.upload_file(
-                file_name, self.bucket_name, f"{timestamp}-{file_name}"
-            )
-            print(f"File {file_name} uploaded to {self.bucket_name}")
-            return f"File {file_name} uploaded to {self.bucket_name}"
+            self.s3_client.upload_file(file, self.bucket_name, f"{file}")
+            print(f"File {file} uploaded to {self.bucket_name}")
+            return f"File {file} uploaded to {self.bucket_name}"
         except Exception as e:
             return f"Error uploading file: {e}"
 
@@ -51,10 +51,10 @@ class WeatherDashboard:
 def main():
     cities = ["London", "Paris", "New York", "Tokyo", "Sydney", "Berlin", "Madrid"]
     weather_dashboard = WeatherDashboard()
-    for city in cities:
-        weather_dashboard.get_weather(city)
     weather_dashboard.create_bucket()
-    weather_dashboard.upload_file("weather.json", "weather.json")
+    for city in cities:
+        filename = weather_dashboard.get_weather(city)
+        weather_dashboard.upload_file(filename)
 
 
 if __name__ == "__main__":
