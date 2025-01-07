@@ -54,6 +54,18 @@ def main():
     weather_dashboard.create_bucket()
     for city in cities:
         filename = weather_dashboard.get_weather(city)
+        if filename:
+            with open(filename, "r") as file:
+                weather_data = json.load(file)
+            temp = weather_data["main"]["temp"]
+            feels_like = weather_data["main"]["feels_like"]
+            humidity = weather_data["main"]["humidity"]
+            description = weather_data["weather"][0]["description"]
+            print(f"Temperature: {temp}°F")
+            print(f"Feels like: {feels_like}°F")
+            print(f"Humidity: {humidity}%")
+            print(f"Conditions: {description}")
+
         weather_dashboard.upload_file(filename)
 
 
